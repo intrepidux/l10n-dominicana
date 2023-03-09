@@ -2,10 +2,18 @@ from werkzeug import urls
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError, AccessError
+from odoo.tools.sql import column_exists, create_column
 
 
 class AccountMove(models.Model):
     _inherit = "account.move"
+
+    def _auto_init(self):
+        # Skip the computation of the field `is_l10n_do_internal_sequence` at the module installation
+        # See `_auto_init` in `l10n_latam_invoice_document/models/account_move.py` for more information
+        if not column_exists(self.env.cr, "account_move", "is_l10n_do_internal_sequence"):
+            create_column(self.env.cr, "account_move", "is_l10n_do_internal_sequence", "int4")
+        return super()._auto_init()
 
     def _get_l10n_do_cancellation_type(self):
         """ Return the list of cancellation types required by DGII. """
